@@ -221,7 +221,7 @@ program
       try {
         const cfg = JSON.parse(readFileSync(configPath, 'utf-8'));
         console.log(`\nConnected to: ${cfg.baseUrl}`);
-        console.log(`Organization: ${cfg.orgId}`);
+        console.log(`Organization: ${cfg.organizationId}`);
         console.log(`Board:        ${cfg.boardId}`);
       } catch {
         console.log('\n⚠️  Config file is invalid JSON');

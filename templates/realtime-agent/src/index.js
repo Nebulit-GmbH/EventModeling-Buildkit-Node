@@ -22,7 +22,7 @@ function loadLocalConfig() {
   const raw = readFileSync(configPath, 'utf-8');
   const cfg = JSON.parse(raw);
 
-  for (const key of ['token', 'orgId', 'boardId', 'baseUrl']) {
+  for (const key of ['token', 'organizationId', 'boardId', 'baseUrl']) {
     if (!cfg[key]) throw new Error(`Missing config field: ${key}`);
   }
 
@@ -50,7 +50,7 @@ async function getRealtimeToken(cfg) {
 }
 
 async function fetchAndPersistSlices(cfg, cwd) {
-  const url = `${cfg.baseUrl}/api/org/${cfg.orgId}/boards/${cfg.boardId}/slicedata/slices`;
+  const url = `${cfg.baseUrl}/api/org/${cfg.organizationId}/boards/${cfg.boardId}/slicedata/slices`;
   const res = await fetch(url, {
     headers: { 'x-token': cfg.token, 'x-board-id': cfg.boardId },
   });
@@ -96,7 +96,7 @@ async function start() {
   const local = loadLocalConfig();
   const cfg = await fetchPlatformConfig(local);
 
-  console.log(`[agent] Starting — org=${cfg.orgId}, board=${cfg.boardId}, base=${cfg.baseUrl}, cwd=${claudeCwd}`);
+  console.log(`[agent] Starting — org=${cfg.organizationId}, board=${cfg.boardId}, base=${cfg.baseUrl}, cwd=${claudeCwd}`);
 
   let realtimeToken = await getRealtimeToken(cfg);
 
