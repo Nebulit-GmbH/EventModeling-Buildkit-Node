@@ -6,8 +6,19 @@ import { randomUUID } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function findConfigPath(startDir) {
+  let dir = startDir;
+  while (true) {
+    const candidate = join(dir, '.eventmodelers', 'config.json');
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error('No .eventmodelers/config.json found in current directory or any parent directory');
+    dir = parent;
+  }
+}
+
 function loadLocalConfig() {
-  const configPath = resolve(__dirname, '../../.eventmodelers/config.json');
+  const configPath = findConfigPath(process.cwd());
   const raw = readFileSync(configPath, 'utf-8');
   const cfg = JSON.parse(raw);
 
