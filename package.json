@@ -1,18 +1,16 @@
 {
-  "name": "ralph-li",
+  "name": "@eventmodelers/node-kit",
   "version": "0.0.2",
   "description": "Real-time Claude agent that reacts to slice:changed events on an Eventmodelers board",
   "type": "module",
   "bin": {
-    "ralph-li": "dist/cli.js"
+    "ralph-li": "src/cli.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/cli.js",
-    "dev": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "chmod +x src/cli.js"
   },
   "files": [
-    "dist",
+    "src",
     "templates",
     "README.md"
   ],
@@ -31,10 +29,6 @@
   },
   "dependencies": {
     "commander": "^12.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

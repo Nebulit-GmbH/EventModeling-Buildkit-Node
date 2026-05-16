@@ -5,7 +5,7 @@ Real-time Claude agent + skill kit for the [Eventmodelers](https://eventmodelers
 ## Quick start
 
 ```bash
-npx @eventmodelers/agent-kit install
+npx @eventmodelers/node-kit install
 ```
 
 The installer will prompt for:

@@ -5,7 +5,15 @@
       "Bash(grep -E \"\\\\.\\(md|ts|js|json\\)$\")",
       "Bash(chmod +x *)",
       "Bash(npm run *)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(npm install *)",
+      "Bash(node *)",
+      "Bash(npm whoami *)",
+      "Bash(npm publish *)",
+      "Read(//Users/martindilger/.npmrcs/**)",
+      "Bash(npm config *)",
+      "Bash(npm view *)",
+      "Bash(npm cache *)"
     ]
   }
 }

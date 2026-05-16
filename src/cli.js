@@ -15,6 +15,17 @@ import {
   appendFileSync,
 } from 'fs';
 import { execSync } from 'child_process';
+import { createInterface } from 'readline';
+
+async function prompt(question) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,7 +40,7 @@ program
 program
   .command('install')
   .description('Install ralph-li into the current directory')
-  .action(() => {
+  .action(async () => {
     console.log('🚀 ralph-li\n');
 
     const targetDir = process.cwd();
@@ -60,7 +71,7 @@ program
               cpSync(rootSourcePath, rootTargetPath);
             }
             console.log(`  ✓ Installed ${rootItem}`);
-          } catch (err: any) {
+          } catch (err) {
             console.error(`  ❌ Failed to copy ${rootItem}:`, err?.message);
           }
         }
@@ -78,7 +89,7 @@ program
           cpSync(sourcePath, targetPath);
         }
         console.log(`  ✓ Installed ${item}`);
-      } catch (err: any) {
+      } catch (err) {
         console.error(`  ❌ Failed to copy ${item}:`, err?.message);
       }
     }
@@ -107,16 +118,55 @@ program
       writeFileSync(gitignorePath, `${gitignoreEntry}\n`);
     }
 
-    // Create empty config file if it doesn't exist
+    // Create or populate config file
     const configDir = join(targetDir, '.eventmodelers');
     const configPath = join(configDir, 'config.json');
     mkdirSync(configDir, { recursive: true });
-    if (!existsSync(configPath)) {
-      writeFileSync(configPath, '{}');
+
+    let config = {};
+    if (existsSync(configPath)) {
+      try {
+        config = JSON.parse(readFileSync(configPath, 'utf-8'));
+      } catch {
+        config = {};
+      }
     }
-    console.log('\n🔑 Next: add your credentials to .eventmodelers/config.json');
-    console.log('   Copy the config from https://app.eventmodelers.de/account and paste it into that file.');
-    console.log('   Also add the boardId of the board you want to watch.');
+
+    const hasConfig = config.organizationId && config.boardId && config.token;
+    if (!hasConfig) {
+      console.log('\n🔑 Enter your Eventmodelers credentials:\n');
+      config.organizationId = config.organizationId || await prompt('  Organization ID: ');
+      config.boardId        = config.boardId        || await prompt('  Board ID:        ');
+      config.token          = config.token          || await prompt('  Token:           ');
+      writeFileSync(configPath, JSON.stringify(config, null, 2));
+      console.log('\n  ✓ Credentials saved to .eventmodelers/config.json');
+    } else {
+      console.log('\n  ✓ Config already present — skipping credential prompt');
+    }
+
+    // Configure MCP server in .claude/settings.json
+    const claudeDir = join(targetDir, '.claude');
+    const settingsPath = join(claudeDir, 'settings.json');
+    mkdirSync(claudeDir, { recursive: true });
+
+    let settings = {};
+    if (existsSync(settingsPath)) {
+      try {
+        settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+      } catch {
+        settings = {};
+      }
+    }
+
+    const baseUrl = config.baseUrl || 'https://api.eventmodelers.de';
+    settings.mcpServers = settings.mcpServers || {};
+    settings.mcpServers.eventmodelers = {
+      type: 'http',
+      url: `${baseUrl}/mcp`,
+    };
+
+    writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    console.log('  ✓ MCP server configured in .claude/settings.json');
 
     console.log('\n✅ Done!\n');
     console.log('Next steps — run both in separate terminals:\n');
