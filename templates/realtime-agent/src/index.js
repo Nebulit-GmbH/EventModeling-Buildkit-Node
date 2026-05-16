@@ -6,6 +6,16 @@ import { randomUUID } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function findRalphShDir(startDir) {
+  let dir = startDir;
+  while (true) {
+    if (existsSync(join(dir, 'ralph.sh'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
 function findConfigPath(startDir) {
   let dir = startDir;
   while (true) {
@@ -91,7 +101,7 @@ async function writeTask(payload, cwd) {
 }
 
 async function start() {
-  const claudeCwd = process.argv[2] ?? resolve(process.cwd(), '..');
+  const claudeCwd = process.argv[2] ?? findRalphShDir(process.cwd()) ?? resolve(process.cwd(), '.');
 
   const local = loadLocalConfig();
   const cfg = await fetchPlatformConfig(local);
