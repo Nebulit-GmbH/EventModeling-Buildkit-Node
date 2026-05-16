@@ -1,6 +1,6 @@
 {
   "name": "@eventmodelers/node-kit",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Real-time Claude agent that reacts to slice:changed events on an Eventmodelers board",
   "type": "module",
   "bin": {
