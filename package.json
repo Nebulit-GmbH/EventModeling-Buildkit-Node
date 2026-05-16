@@ -1,6 +1,6 @@
 {
   "name": "ralph-li",
-  "version": "0.1.25",
+  "version": "0.0.1",
   "description": "Real-time Claude agent that reacts to slice:changed events on an Eventmodelers board",
   "type": "module",
   "bin": {
