@@ -4,7 +4,8 @@
       "Bash(xargs ls -lh)",
       "Bash(grep -E \"\\\\.\\(md|ts|js|json\\)$\")",
       "Bash(chmod +x *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Skill(update-config)"
     ]
   }
 }

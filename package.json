@@ -1,11 +1,10 @@
 {
-  "name": "@eventmodelers/agent-kit",
+  "name": "ralph-li",
   "version": "0.1.25",
-  "description": "Real-time Claude agent + skill kit for the Eventmodelers platform",
+  "description": "Real-time Claude agent that reacts to slice:changed events on an Eventmodelers board",
   "type": "module",
   "bin": {
-    "eventmodelers": "dist/cli.js",
-    "agent-kit": "dist/cli.js"
+    "ralph-li": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/cli.js",
@@ -21,10 +20,9 @@
     "claude",
     "claude-code",
     "eventmodelers",
-    "event-storming",
-    "event-driven",
+    "slice-changed",
     "realtime-agent",
-    "ddd"
+    "ralph-li"
   ],
   "author": "Martin Dilger",
   "license": "MIT",

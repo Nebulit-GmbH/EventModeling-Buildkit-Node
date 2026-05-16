@@ -4,19 +4,34 @@ Patterns and gotchas discovered during task processing. Update this file wheneve
 
 ## tasks.json
 
-- Tasks are objects with `id`, `createdAt`, and `prompts[]`.
-- Priority is determined per-prompt (`priority: true`), not per-task. A task is high-priority if any of its prompts has `priority: true`.
+- Tasks are objects with `id`, `createdAt`, and `payload` (a `SliceChangedPayload`).
 - After completing a task, remove it from the array entirely — do not add a status field.
 - Write `[]` to `tasks.json` if the last task is completed.
+
+## SliceChangedPayload fields
+
+```
+event           always "slice:changed"
+organizationId  org UUID or null
+boardId         board UUID
+sliceId         SLICE_BORDER node UUID — use this with /load-slice
+sliceTitle      human-readable slice name (may be null)
+sliceStatus     e.g. "Created", "InProgress", "Done", "Blocked" (may be null)
+timestamp       unix ms when the change was emitted
+```
+
+## Slice files
+
+The realtime agent writes `slices/<sliceId>.json` for every slice on startup and after each `slice:changed` event. These files are always up to date — read them directly before invoking any skill.
 
 ## Skill Usage
 
 - Always run `/connect` first to load credentials from `.eventmodelers/config.json` before calling any other skill.
-- `/place-element` requires an existing column — create one via the timeline API if the target column does not exist yet.
-- `/timeline` is the right skill for any prompt that describes adding, renaming, or reordering events on a swimlane.
-- `/wdyt` posts QUESTION comments directly onto nodes — use it for review/analysis prompts, not for modifications.
+- `/load-slice sliceId=<uuid>` re-fetches all slices from the API, refreshes `slices/*.json`, and returns the requested slice. Use it when you need a guaranteed-fresh view of a specific slice.
+- Read `slices/<sliceId>.json` directly when you already know the ID and the file is recent enough.
 
 ## Board API
 
-- The `board_id`, `timeline_id`, and `organization_id` from each prompt provide full context — pass them to skills that need them.
-- Node events use `node:created`, `node:changed`, `node:deleted` — always POST to `/api/boards/:boardId/nodes/events`.
+- The `boardId` and `organizationId` from each payload provide full context — pass them to skills.
+- Node events use `node:created`, `node:changed`, `node:deleted` — always POST to `/api/org/:orgId/boards/:boardId/nodes/events`.
+- Slice metadata (title, status) lives on the SLICE_BORDER node under `meta.sliceStatus` and `meta.title`.

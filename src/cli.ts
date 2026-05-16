@@ -22,15 +22,15 @@ const __dirname = dirname(__filename);
 const program = new Command();
 
 program
-  .name('eventmodelers')
-  .description('Eventmodelers Agent Kit — real-time Claude agent + skills for Claude Code')
-  .version('0.1.0');
+  .name('ralph-li')
+  .description('ralph-li — real-time Claude agent that reacts to slice:changed events on an Eventmodelers board')
+  .version('0.1.25');
 
 program
   .command('install')
-  .description('Install agent kit into the current directory')
+  .description('Install ralph-li into the current directory')
   .action(() => {
-    console.log('🚀 Eventmodelers Agent Kit\n');
+    console.log('🚀 ralph-li\n');
 
     const targetDir = process.cwd();
 
@@ -116,10 +116,11 @@ program
     }
     console.log('\n🔑 Next: add your credentials to .eventmodelers/config.json');
     console.log('   Copy the config from https://app.eventmodelers.de/account and paste it into that file.');
+    console.log('   Also add the boardId of the board you want to watch.');
 
     console.log('\n✅ Done!\n');
     console.log('Next steps — run both in separate terminals:\n');
-    console.log('  Terminal 1 — realtime agent (picks up prompts → writes tasks.json):');
+    console.log('  Terminal 1 — realtime agent (subscribes to slice:changed → writes tasks.json):');
     console.log('       cd realtime-agent && npm run dev\n');
     console.log('  Terminal 2 — ralph loop (reads tasks.json → executes via Claude):');
     console.log('       ./ralph.sh\n');
@@ -129,7 +130,7 @@ program
 
 program
   .command('uninstall')
-  .description('Remove agent kit files from current directory')
+  .description('Remove ralph-li files from current directory')
   .action(() => {
     const targets = [
       join(process.cwd(), '.claude', 'skills'),
@@ -151,12 +152,11 @@ program
   .command('status')
   .description('Check installation status')
   .action(() => {
-    const skillsDir
-        = join(process.cwd(), '.claude', 'skills');
+    const skillsDir = join(process.cwd(), '.claude', 'skills');
     const configPath = join(process.cwd(), '.eventmodelers', 'config.json');
     const agentDir = join(process.cwd(), 'realtime-agent');
 
-    console.log('Eventmodelers Agent Kit Status\n');
+    console.log('ralph-li Status\n');
     console.log(`Skills:         ${existsSync(skillsDir) ? '✅ installed' : '❌ not found'}`);
     console.log(`Config:         ${existsSync(configPath) ? '✅ present' : '❌ missing'}`);
     console.log(`Realtime agent: ${existsSync(agentDir) ? '✅ present' : '❌ missing'}`);
@@ -165,7 +165,8 @@ program
       try {
         const cfg = JSON.parse(readFileSync(configPath, 'utf-8'));
         console.log(`\nConnected to: ${cfg.baseUrl}`);
-        console.log(`Organization: ${cfg.organizationId}`);
+        console.log(`Organization: ${cfg.orgId}`);
+        console.log(`Board:        ${cfg.boardId}`);
       } catch {
         console.log('\n⚠️  Config file is invalid JSON');
       }
