@@ -123,6 +123,12 @@ program
     const configPath = join(configDir, 'config.json');
     mkdirSync(configDir, { recursive: true });
 
+    const hasExisting = await prompt('\nDo you have an existing config from app.eventmodelers.de/account? (y/n): ');
+    if (hasExisting.toLowerCase() === 'y' || hasExisting.toLowerCase() === 'yes') {
+      console.log(`\n  Paste your config into:\n\n    ${configPath}\n\n  Then re-run this installer.\n`);
+      process.exit(0);
+    }
+
     let config = {};
     if (existsSync(configPath)) {
       try {
