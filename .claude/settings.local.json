@@ -13,7 +13,8 @@
       "Read(//Users/martindilger/.npmrcs/**)",
       "Bash(npm config *)",
       "Bash(npm view *)",
-      "Bash(npm cache *)"
+      "Bash(npm cache *)",
+      "Bash(xargs -I{} ls {})"
     ]
   }
 }
