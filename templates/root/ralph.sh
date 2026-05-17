@@ -6,12 +6,14 @@
 #
 # The phases are NOT causally linked — either can trigger on its own.
 #
-# Usage: ./ralph.sh [project_dir]
+# Usage: ./ralph.sh [iterations] [project_dir]
+#   iterations  — number of loop cycles to run; 0 or omitted means run forever
+#   project_dir — defaults to current working directory
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="${1:-"$SCRIPT_DIR"}"
+ITERATIONS="${1:-0}"
+PROJECT_DIR="${2:-.}"
 TASKS_FILE="$PROJECT_DIR/tasks.json"
 PROMPT_FILE="$PROJECT_DIR/prompt.md"
 BACKEND_PROMPT_FILE="$PROJECT_DIR/backend-prompt.md"
@@ -49,7 +51,8 @@ run_agent() {
   done
 }
 
-while true; do
+cycle=0
+while [[ "$ITERATIONS" -eq 0 || "$cycle" -lt "$ITERATIONS" ]]; do
   ran_something=false
 
   if has_pending_tasks; then
@@ -65,4 +68,6 @@ while true; do
   if [[ "$ran_something" == false ]]; then
     sleep 3
   fi
+
+  (( cycle++ )) || true
 done
