@@ -10,7 +10,7 @@ The structure defined in the Project-Skills is relevant.
 1. Read the description at `.slices/index.json` (in the same directory as this file). Every item in status "planned" is a task.
 2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
 3. Make sure you are on the right branch "feature/<slicename>", if unsure, start from main.
-5. Pick the **highest priority** slice where status is "planned" ( case insensitive ). This becomes your PRD. Set the status "InProgress" in the index.json. If no slice has status planned, reply with:
+5. Pick the **highest priority** slice where status is "planned" ( case insensitive ). This becomes your PRD. Set the status "InProgress" in the index.json **and** update the slice status on the eventmodelers board using the `update-slice-status` skill (or MCP if available). If no slice has status planned, reply with:
    <promise>NO_TASKS</promise> and stop. Do not work on other slices.
 6. Pick the slice definition from the project root /.slices in <folder> defined in the prd. Never work on more than one slice per iteration.
 7. A slice can define additional prompts as codegen/backendPrompt. any additional prompts defined in backend are hints for the implementation of the slice and have to be taken into account. If you use the additional prompt, add a line in progress.txt
@@ -26,7 +26,7 @@ The structure defined in the Project-Skills is relevant.
 14. even if the slice is fully implemented, run your test-analyzer skill and provide the code-slice.json file as defined in the skill
 15. If checks pass, commit ALL changes with message: `feat: [Slice Name]` and merge back to main as FF merge ( update
     first )
-16. Update the PRD to set `status: Done` for the completed story.
+16. Update the PRD to set `status: Done` for the completed story in index.json **and** update the slice status on the eventmodelers board using the `update-slice-status` skill (or MCP if available).
 17. Append your progress to `progress.txt` after each step in the iteration.
 18. append your new learnings to AGENTS.md in a compressed form, reusable for future iterations. Only add learnings if they are not already there.
 19. Finish the iteration.
