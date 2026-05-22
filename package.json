@@ -1,7 +1,7 @@
 {
-  "name": "@eventmodelers/node-kit",
+  "name": "@eventmodelers/build-kit-node",
   "version": "0.0.15",
-  "description": "Real-time Claude agent that reacts to slice:changed events on an Eventmodelers board",
+  "description": "Real-time Claude agent that connects to the Eventmodelers Platform and generates Code from Eventmodels",
   "type": "module",
   "bin": {
     "ralph-li": "src/cli.js"

@@ -43,7 +43,8 @@ program
   .action(async () => {
     console.log('🚀 ralph-li\n');
 
-    const targetDir = process.cwd();
+    const targetDir = join(process.cwd(), '.build-kit-node');
+    mkdirSync(targetDir, { recursive: true });
 
     const templatesSource = join(__dirname, '..', 'templates');
 
@@ -106,9 +107,9 @@ program
       }
     }
 
-    // Add .eventmodelers/ to .gitignore
-    const gitignorePath = join(targetDir, '.gitignore');
-    const gitignoreEntry = '.eventmodelers/';
+    // Add .build-kit-node/ to project root .gitignore
+    const gitignorePath = join(process.cwd(), '.gitignore');
+    const gitignoreEntry = '.build-kit-node/';
     if (existsSync(gitignorePath)) {
       const content = readFileSync(gitignorePath, 'utf-8');
       if (!content.includes(gitignoreEntry)) {
@@ -145,7 +146,7 @@ program
       config.boardId        = config.boardId        || await prompt('  Board ID:        ');
       config.token          = config.token          || await prompt('  Token:           ');
       writeFileSync(configPath, JSON.stringify(config, null, 2));
-      console.log('\n  ✓ Credentials saved to .eventmodelers/config.json');
+      console.log('\n  ✓ Credentials saved to .build-kit-node/.eventmodelers/config.json');
     } else {
       console.log('\n  ✓ Config already present — skipping credential prompt');
     }
@@ -175,13 +176,14 @@ program
     console.log('  ✓ MCP server configured in .claude/settings.json');
 
     console.log('\n✅ Done!\n');
-    console.log('Next steps — run both in separate terminals:\n');
-    console.log('  Terminal 1 — realtime agent (subscribes to slice:changed → writes tasks.json):');
-    console.log('       cd realtime-agent && npm run dev\n');
+    console.log('Next steps:\n');
+    console.log('  Terminal 1 — realtime agent (optional — only needed for automatic board notifications):');
+    console.log('       cd .build-kit-node/realtime-agent && npm run dev\n');
     console.log('  Terminal 2 — ralph loop (reads tasks.json → executes via Claude):');
-    console.log('       ./ralph.sh\n');
-    console.log('Both run indefinitely. The loop waits when tasks.json is empty.');
-    console.log('\nSkills are ready in .claude/skills/ — use /connect to set a board ID.');
+    console.log('       cd .build-kit-node && ./ralph.sh\n');
+    console.log('The loop waits when tasks.json is empty. Pass a path to target a different project:');
+    console.log('       ./ralph.sh 0 /path/to/project\n');
+    console.log('Skills are ready in .build-kit-node/.claude/skills/ — use /connect to set a board ID.');
   });
 
 program
@@ -189,9 +191,7 @@ program
   .description('Remove ralph-li files from current directory')
   .action(() => {
     const targets = [
-      join(process.cwd(), '.claude', 'skills'),
-      join(process.cwd(), 'realtime-agent'),
-      join(process.cwd(), '.eventmodelers'),
+      join(process.cwd(), '.build-kit-node'),
     ];
 
     for (const t of targets) {
@@ -208,11 +208,13 @@ program
   .command('status')
   .description('Check installation status')
   .action(() => {
-    const skillsDir = join(process.cwd(), '.claude', 'skills');
-    const configPath = join(process.cwd(), '.eventmodelers', 'config.json');
-    const agentDir = join(process.cwd(), 'realtime-agent');
+    const kitDir = join(process.cwd(), '.build-kit-node');
+    const skillsDir = join(kitDir, '.claude', 'skills');
+    const configPath = join(kitDir, '.eventmodelers', 'config.json');
+    const agentDir = join(kitDir, 'realtime-agent');
 
-    console.log('ralph-li Status\n');
+    console.log('build-kit-node Status\n');
+    console.log(`Kit dir:        ${existsSync(kitDir) ? '✅ installed' : '❌ not found'}`);
     console.log(`Skills:         ${existsSync(skillsDir) ? '✅ installed' : '❌ not found'}`);
     console.log(`Config:         ${existsSync(configPath) ? '✅ present' : '❌ missing'}`);
     console.log(`Realtime agent: ${existsSync(agentDir) ? '✅ present' : '❌ missing'}`);

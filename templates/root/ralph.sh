@@ -8,23 +8,24 @@
 #
 # Usage: ./ralph.sh [iterations] [project_dir]
 #   iterations  — number of loop cycles to run; 0 or omitted means run forever
-#   project_dir — defaults to current working directory
+#   project_dir — path to the project root; defaults to ../  (parent of .build-kit-node)
 
 set -euo pipefail
 
+KIT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ITERATIONS="${1:-0}"
-PROJECT_DIR="${2:-.}"
-TASKS_FILE="$PROJECT_DIR/tasks.json"
-PROMPT_FILE="$PROJECT_DIR/prompt.md"
-BACKEND_PROMPT_FILE="$PROJECT_DIR/backend-prompt.md"
-AGENT_SCRIPT="$PROJECT_DIR/agent.sh"
+PROJECT_DIR="${2:-"$KIT_DIR/.."}"
+TASKS_FILE="$KIT_DIR/tasks.json"
+PROMPT_FILE="$KIT_DIR/prompt.md"
+BACKEND_PROMPT_FILE="$KIT_DIR/backend-prompt.md"
+AGENT_SCRIPT="$KIT_DIR/agent.sh"
 
-if [[ ! -f "$PROJECT_DIR/.eventmodelers/config.json" ]]; then
-  echo "ERROR: No .eventmodelers/config.json found in $PROJECT_DIR"
+if [[ ! -f "$KIT_DIR/.eventmodelers/config.json" ]]; then
+  echo "ERROR: No .eventmodelers/config.json found in $KIT_DIR"
   exit 1
 fi
 
-echo "Ralph — project: $PROJECT_DIR"
+echo "Ralph — kit: $KIT_DIR  project: $PROJECT_DIR"
 
 # Returns 0 if tasks.json has at least one task
 has_pending_tasks() {

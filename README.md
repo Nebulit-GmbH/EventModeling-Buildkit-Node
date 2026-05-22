@@ -1,4 +1,4 @@
-# @eventmodelers/node-kit
+# @eventmodelers/build-kit-node
 
 Real-time Claude agent + skill kit for the [Eventmodelers](https://eventmodelers.de) platform. Connect your board to a fully autonomous coding agent that picks up slice status changes, implements the code, and marks work done — all without manual intervention.
 
@@ -37,7 +37,7 @@ Phase 2: build slice
 Run the installer in your project directory:
 
 ```bash
-npx @eventmodelers/node-kit install
+npx @eventmodelers/build-kit-node install
 ```
 
 The installer will ask for three values:
@@ -48,46 +48,56 @@ The installer will ask for three values:
 | **Organization ID** | URL bar in your Eventmodelers workspace: `.../org/<UUID>/...` |
 | **Base URL** | Default: `https://api.eventmodelers.de` |
 
-What gets written to disk:
+Everything is installed inside a `.build-kit-node/` folder in your project root (gitignored automatically):
 
 | Path | Purpose |
 |------|---------|
-| `.eventmodelers/config.json` | Your credentials (gitignored automatically) |
-| `.claude/skills/connect` | Resolves board config for all other skills |
-| `.claude/skills/load-slice` | Fetches slice definitions from the board |
-| `.claude/skills/update-slice-status` | Changes a slice's status on the board |
-| `.claude/skills/build-state-change` | Implements command handler slices |
-| `.claude/skills/build-state-view` | Implements projection/read model slices |
-| `.claude/skills/build-automation` | Implements reactor/automation slices |
-| `.claude/skills/learn-eventmodelers-api` | Full API reference for the agent |
-| `realtime-agent/` | Node.js listener for board events |
-| `ralph.sh` | The main agent loop |
-| `prompt.md` | Phase 1 instructions (load slice) |
-| `backend-prompt.md` | Phase 2 instructions (build slice) |
-| `AGENT.md` | Accumulated learnings across iterations |
+| `.build-kit-node/.eventmodelers/config.json` | Your credentials |
+| `.build-kit-node/.claude/skills/connect` | Resolves board config for all other skills |
+| `.build-kit-node/.claude/skills/load-slice` | Fetches slice definitions from the board |
+| `.build-kit-node/.claude/skills/update-slice-status` | Changes a slice's status on the board |
+| `.build-kit-node/.claude/skills/build-state-change` | Implements command handler slices |
+| `.build-kit-node/.claude/skills/build-state-view` | Implements projection/read model slices |
+| `.build-kit-node/.claude/skills/build-automation` | Implements reactor/automation slices |
+| `.build-kit-node/.claude/skills/learn-eventmodelers-api` | Full API reference for the agent |
+| `.build-kit-node/realtime-agent/` | Node.js listener for board events (optional) |
+| `.build-kit-node/ralph.sh` | The main agent loop |
+| `.build-kit-node/prompt.md` | Phase 1 instructions (load slice) |
+| `.build-kit-node/backend-prompt.md` | Phase 2 instructions (build slice) |
+| `.build-kit-node/AGENT.md` | Accumulated learnings across iterations |
 
 ---
 
-## Step 2 — Install realtime agent dependencies
+## Step 2 — Start the ralph loop
+
+Open a terminal, enter the kit folder, and start the loop:
 
 ```bash
-cd realtime-agent && npm install
+cd .build-kit-node && ./ralph.sh
+```
+
+By default ralph targets `../` (your project root). Pass a path to override:
+
+```bash
+./ralph.sh 0 /path/to/project
 ```
 
 ---
 
-## Step 3 — Connect the realtime agent
+## Realtime agent (optional)
 
-Start the realtime agent from your project root. It connects to the Eventmodelers Supabase channel for your board and listens for `slice:changed` events.
+The realtime agent is **only needed if you want automatic notifications** when a slice status changes on the board. If you prefer to pull changes manually or trigger runs yourself, you can skip it entirely.
+
+When you do want it, install its dependencies and start it:
 
 ```bash
-cd realtime-agent && npm run dev
+cd .build-kit-node/realtime-agent && npm install && npm run dev
 ```
 
-On startup the agent:
-1. Reads `.eventmodelers/config.json`
+On startup the realtime agent:
+1. Reads `.build-kit-node/.eventmodelers/config.json`
 2. Fetches platform config and a short-lived realtime auth token from the API
-3. Persists all current board slices to `slices/<id>.json`
+3. Persists all current board slices to `.build-kit-node/slices/<id>.json`
 4. Subscribes to the private channel `board:<boardId>-slicechanged`
 5. Refreshes the realtime token automatically every 10 minutes
 
@@ -95,29 +105,11 @@ You should see output like:
 
 ```
 [agent] Starting — org=..., board=..., base=https://api.eventmodelers.de, cwd=...
-[agent] Persisted 12 slice(s) to .../slices
+[agent] Persisted 12 slice(s) to .../.build-kit-node/slices
 [agent] Realtime channel "board:d886f...-slicechanged" status: SUBSCRIBED
 ```
 
-Keep this process running. It is the bridge between your board and the agent loop.
-
----
-
-## Step 4 — Start the ralph loop
-
-Open a second terminal and start the main loop:
-
-```bash
-./ralph.sh
-```
-
-The loop runs forever (pass an iteration count to limit it: `./ralph.sh 5`). It polls every 3 seconds when idle, waiting for either pending tasks or planned slices.
-
-```
-Ralph — project: /your/project
-[12:00:00] idle — sleeping 3s
-[12:00:03] idle — sleeping 3s
-```
+Keep this process running when you want automatic board notifications.
 
 ---
 
@@ -148,8 +140,8 @@ The realtime agent receives the broadcast payload:
 ```
 
 It immediately:
-1. Re-fetches all slices and updates local `slices/` snapshots
-2. Appends a new task entry to `tasks.json`:
+1. Re-fetches all slices and updates local `.build-kit-node/slices/` snapshots
+2. Appends a new task entry to `.build-kit-node/tasks.json`:
 
 ```json
 [
@@ -171,7 +163,7 @@ It immediately:
 Terminal output:
 ```
 [agent] slice:changed — slice="Place Order" status="Planned"
-[agent] Persisted 12 slice(s) to .../slices
+[agent] Persisted 12 slice(s) to .../.build-kit-node/slices
 [agent] Task uuid-... written — slice="Place Order" status="Planned"
 ```
 
@@ -188,7 +180,7 @@ The ralph loop detects a non-empty `tasks.json` and runs **Phase 1** — the `pr
 The agent:
 1. Reads `AGENT.md` to load accumulated learnings
 2. Reads `tasks.json`, picks the oldest task
-3. Runs `/connect` → resolves token, board ID, org ID, base URL from `.eventmodelers/config.json`
+3. Runs `/connect` → resolves token, board ID, org ID, base URL from `.build-kit-node/.eventmodelers/config.json`
 4. Runs `/load-slice sliceId=a3f2c891-...` → fetches full slice definition from the board API and writes it to `.slices/<context>/Place-Order/slice.json`
 5. Updates `.slices/<context>/index.json` with the slice metadata and status
 6. Removes the completed task from `tasks.json` (writes `[]` if last task)
@@ -255,17 +247,19 @@ The agent appends a final progress entry to `progress.txt` and updates `AGENT.md
 
 ## Project files reference
 
+All kit files live inside `.build-kit-node/`:
+
 | File | Written by | Read by | Purpose |
 |------|-----------|---------|---------|
-| `.eventmodelers/config.json` | installer / `/connect` | all skills, realtime agent | credentials |
-| `tasks.json` | realtime agent | Phase 1 agent | task queue |
-| `slices/<id>.json` | realtime agent | Phase 1 agent | raw board slice snapshots |
-| `.slices/<ctx>/index.json` | `/load-slice` skill | Phase 2 agent | slice metadata + status |
-| `.slices/<ctx>/<folder>/slice.json` | `/load-slice` skill | build skills | full slice definition |
-| `progress.txt` | Phase 1 + 2 agents | Phase 2 agent (patterns section) | work log |
-| `AGENT.md` | Phase 1 + 2 agents | both agents at startup | accumulated learnings |
-| `prompt.md` | installer | ralph.sh (Phase 1) | Phase 1 agent instructions |
-| `backend-prompt.md` | installer | ralph.sh (Phase 2) | Phase 2 agent instructions |
+| `.build-kit-node/.eventmodelers/config.json` | installer / `/connect` | all skills, realtime agent | credentials |
+| `.build-kit-node/tasks.json` | realtime agent | Phase 1 agent | task queue |
+| `.build-kit-node/slices/<id>.json` | realtime agent | Phase 1 agent | raw board slice snapshots |
+| `.build-kit-node/.slices/<ctx>/index.json` | `/load-slice` skill | Phase 2 agent | slice metadata + status |
+| `.build-kit-node/.slices/<ctx>/<folder>/slice.json` | `/load-slice` skill | build skills | full slice definition |
+| `.build-kit-node/progress.txt` | Phase 1 + 2 agents | Phase 2 agent (patterns section) | work log |
+| `.build-kit-node/AGENT.md` | Phase 1 + 2 agents | both agents at startup | accumulated learnings |
+| `.build-kit-node/prompt.md` | installer | ralph.sh (Phase 1) | Phase 1 agent instructions |
+| `.build-kit-node/backend-prompt.md` | installer | ralph.sh (Phase 2) | Phase 2 agent instructions |
 
 ---
 
@@ -286,9 +280,9 @@ The agent appends a final progress entry to `progress.txt` and updates `AGENT.md
 ## CLI commands
 
 ```bash
-npx @eventmodelers/node-kit install    # install and configure
-npx @eventmodelers/node-kit status     # check what is installed
-npx @eventmodelers/node-kit uninstall  # remove all installed files
+npx @eventmodelers/build-kit-node install    # install and configure
+npx @eventmodelers/build-kit-node status     # check what is installed
+npx @eventmodelers/build-kit-node uninstall  # remove all installed files
 ```
 
 ---
