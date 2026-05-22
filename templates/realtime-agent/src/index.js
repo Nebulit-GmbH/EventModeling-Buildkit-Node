@@ -6,6 +6,37 @@ import { randomUUID } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+class HttpError extends Error {
+  constructor(status, body) {
+    super(`HTTP ${status}: ${body}`);
+    this.status = status;
+  }
+}
+
+async function fetchJSON(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new HttpError(res.status, await res.text());
+  return res.json();
+}
+
+async function retryOn401(label, fn, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err instanceof HttpError && err.status === 401) {
+        if (attempt < maxRetries) {
+          console.warn(`[agent] ${label} — 401 Unauthorized, retrying (${attempt}/${maxRetries})...`);
+          continue;
+        }
+        console.error(`[agent] ${label} — 401 Unauthorized after ${maxRetries} retries, shutting down`);
+        process.exit(1);
+      }
+      throw err;
+    }
+  }
+}
+
 function findRalphShDir(startDir) {
   let dir = startDir;
   while (true) {
@@ -42,34 +73,24 @@ function loadLocalConfig() {
 }
 
 async function fetchPlatformConfig(local) {
-  const res = await fetch(`${local.baseUrl}/api/config`, {
+  const remote = await fetchJSON(`${local.baseUrl}/api/config`, {
     headers: { 'x-token': local.token },
   });
-  if (!res.ok) throw new Error(`Failed to fetch platform config: ${res.status} / ${res.statusText} / ${await res.text()}`);
-  const remote = await res.json();
   return { ...local, ...remote };
 }
 
 async function getRealtimeToken(cfg) {
-  const res = await fetch(`${cfg.baseUrl}/api/prompts/realtime-token`, {
+  const { token } = await fetchJSON(`${cfg.baseUrl}/api/prompts/realtime-token`, {
     headers: { 'x-token': cfg.token },
   });
-  if (!res.ok) throw new Error(`Failed to get realtime token: ${res.status} / ${res.statusText} / ${await res.text()}`);
-  const { token } = await res.json();
   return token;
 }
 
 async function fetchAndPersistSlices(cfg, cwd) {
   const url = `${cfg.baseUrl}/api/org/${cfg.organizationId}/boards/${cfg.boardId}/slicedata/slices`;
-  const res = await fetch(url, {
+  const { slices } = await fetchJSON(url, {
     headers: { 'x-token': cfg.token, 'x-board-id': cfg.boardId },
   });
-  if (!res.ok) {
-    console.error(`[agent] Failed to fetch slices: ${res.status} ${res.statusText}`);
-    return;
-  }
-
-  const { slices } = await res.json();
 
   const slicesDir = join(cwd, 'slices');
   mkdirSync(slicesDir, { recursive: true });
@@ -104,13 +125,13 @@ async function start() {
   const claudeCwd = process.argv[2] ?? findRalphShDir(process.cwd()) ?? resolve(process.cwd(), '.');
 
   const local = loadLocalConfig();
-  const cfg = await fetchPlatformConfig(local);
+  const cfg = await retryOn401('fetchPlatformConfig', () => fetchPlatformConfig(local));
 
   console.log(`[agent] Starting — org=${cfg.organizationId}, board=${cfg.boardId}, base=${cfg.baseUrl}, cwd=${claudeCwd}`);
 
-  let realtimeToken = await getRealtimeToken(cfg);
+  let realtimeToken = await retryOn401('getRealtimeToken', () => getRealtimeToken(cfg));
 
-  await fetchAndPersistSlices(cfg, claudeCwd).catch((err) =>
+  await retryOn401('fetchAndPersistSlices', () => fetchAndPersistSlices(cfg, claudeCwd)).catch((err) =>
     console.error('[agent] Initial slice fetch error:', err),
   );
 
@@ -124,11 +145,17 @@ async function start() {
 
   supabase
     .channel(channelName, { config: { private: true } })
+    .on('broadcast', { event: 'message' }, (msg) => {
+      if (msg.payload === 'Exit') {
+        console.log('[agent] Received "Exit" — shutting down');
+        process.exit(0);
+      }
+    })
     .on('broadcast', { event: 'slice:changed' }, async (msg) => {
       const payload = msg.payload;
       console.log(`[agent] slice:changed — slice="${payload.sliceTitle}" status="${payload.sliceStatus}"`);
 
-      await fetchAndPersistSlices(cfg, claudeCwd).catch((err) =>
+      await retryOn401('fetchAndPersistSlices', () => fetchAndPersistSlices(cfg, claudeCwd)).catch((err) =>
         console.error('[agent] Slice persist error:', err),
       );
 
@@ -142,7 +169,7 @@ async function start() {
 
   setInterval(async () => {
     try {
-      realtimeToken = await getRealtimeToken(cfg);
+      realtimeToken = await retryOn401('getRealtimeToken (refresh)', () => getRealtimeToken(cfg));
       supabase.realtime.setAuth(realtimeToken);
       console.log('[agent] Realtime token refreshed');
     } catch (err) {
