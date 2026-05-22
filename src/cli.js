@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, relative, sep } from 'path';
 import {
   existsSync,
   mkdirSync,
@@ -67,7 +67,10 @@ program
           const rootTargetPath = join(targetDir, rootItem);
           try {
             if (statSync(rootSourcePath).isDirectory()) {
-              cpSync(rootSourcePath, rootTargetPath, { recursive: true });
+              cpSync(rootSourcePath, rootTargetPath, {
+                recursive: true,
+                filter: (s) => !relative(rootSourcePath, s).split(sep).includes('node_modules'),
+              });
             } else {
               cpSync(rootSourcePath, rootTargetPath);
             }
@@ -84,7 +87,7 @@ program
         if (statSync(sourcePath).isDirectory()) {
           cpSync(sourcePath, targetPath, {
             recursive: true,
-            filter: (src) => !src.substring(templatesSource.length).includes('node_modules'),
+            filter: (s) => !relative(sourcePath, s).split(sep).includes('node_modules'),
           });
         } else {
           cpSync(sourcePath, targetPath);
