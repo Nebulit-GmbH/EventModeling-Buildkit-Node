@@ -177,6 +177,21 @@ async function start() {
     }
   }, 10 * 60 * 1000);
 
+  const ping = async () => {
+    try {
+      const res = await fetch(`${cfg.baseUrl}/api/agent-alive`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${realtimeToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: cfg.token }),
+      });
+      if (!res.ok) console.error(`[agent] Ping failed: ${res.status}`);
+    } catch (err) {
+      console.error('[agent] Ping error:', err);
+    }
+  };
+
+  await ping();
+  setInterval(ping, 30 * 1000);
 }
 
 start().catch((err) => {
