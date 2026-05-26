@@ -80,7 +80,7 @@ async function fetchPlatformConfig(local) {
 }
 
 async function getRealtimeToken(cfg) {
-  const { token } = await fetchJSON(`${cfg.baseUrl}/api/prompts/realtime-token`, {
+  const { token } = await fetchJSON(`${cfg.baseUrl}/api/org/${cfg.organizationId}/prompts/realtime-token`, {
     headers: { 'x-token': cfg.token },
   });
   return token;
