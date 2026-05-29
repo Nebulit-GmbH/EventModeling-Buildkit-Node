@@ -1,8 +1,8 @@
 #!/bin/bash
 # Ralph agent loop — two independent phases, each triggered by their own condition
 #
-# Phase 1: tasks.json has entries  → load slice from board, update .slices/
-# Phase 2: .slices/**/index.json has a "Planned" slice → build it
+# Phase 1: tasks.json has entries  → load slice from board, update .build-kit-node/slices/
+# Phase 2: $KIT_DIR/slices/**/index.json has a "Planned" slice → build it
 #
 # The phases are NOT causally linked — either can trigger on its own.
 #
@@ -35,9 +35,9 @@ has_pending_tasks() {
   [[ "$content" != "[]" && -n "$content" ]]
 }
 
-# Returns 0 if any index.json under .slices/ contains a "Planned" slice
+# Returns 0 if any JSON under .build-kit-node/slices/ contains a "Planned" status
 has_planned_slices() {
-  grep -rqi '"status"[[:space:]]*:[[:space:]]*"planned"' "$PROJECT_DIR/.slices/" 2>/dev/null
+  grep -rqi '"status"[[:space:]]*:[[:space:]]*"planned"' "$KIT_DIR/slices/" 2>/dev/null
 }
 
 # Runs agent.sh with the given prompt; retries on non-zero exit

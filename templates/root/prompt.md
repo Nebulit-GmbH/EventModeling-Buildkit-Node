@@ -5,13 +5,13 @@ You are an autonomous agent reacting to slice status change events on an Eventmo
 ## Your Loop
 
 1. Read `AGENT.md` to load accumulated learnings before doing anything else.
-2. Read `tasks.json` in the current directory.
+2. Read `.build-kit-node/tasks.json`.
 3. If `tasks.json` is empty or missing, reply with:
    <promise>IDLE</promise>
    and stop.
 4. Pick the **oldest task** (earliest `createdAt`).
 5. Execute the task — see the Execution section below.
-6. After execution, remove that task from the array and write `tasks.json` back.
+6. After execution, remove that task from the array and write `.build-kit-node/tasks.json` back.
 7. Append a progress entry to `progress.txt` (create if missing).
 8. Update `AGENT.md` with any new reusable learnings discovered this iteration.
 9. Reply normally so the next iteration can pick up the next task.
@@ -56,7 +56,7 @@ Use the skills available in `.claude/skills/` to interact with the board if need
 
 ## Updating tasks.json
 
-After completing a task, remove it from the array and write the updated array back to `tasks.json`. If the array is now empty, write `[]`.
+After completing a task, remove it from the array and write the updated array back to `.build-kit-node/tasks.json`. If the array is now empty, write `[]`.
 
 ## Progress Report Format
 
@@ -77,7 +77,7 @@ Learnings:
 
 ## Stop Condition
 
-If `tasks.json` is empty (`[]`) or does not exist, reply with:
+If `.build-kit-node/tasks.json` is empty (`[]`) or does not exist, reply with:
 <promise>IDLE</promise>
 
 ## Updating AGENT.md

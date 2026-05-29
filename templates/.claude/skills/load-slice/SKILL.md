@@ -1,6 +1,6 @@
 ---
 name: load-slice
-description: Load all slices from the board via the slicedata API and persist them to the .slices/ directory hierarchy (index.json with full definitions, per-slice folders). Returns data for a specific slice by ID or title.
+description: Load all slices from the board via the slicedata API and persist them to the .build-kit-node/slices/ directory hierarchy (index.json with full definitions, per-slice folders). Returns data for a specific slice by ID or title.
 ---
 
 # Load Slice
@@ -38,7 +38,7 @@ Save the full array as `ALL_SLICES`.
 
 ---
 
-## Step 3 — Persist slices to .slices/ directory
+## Step 3 — Persist slices to .build-kit-node/slices/ directory
 
 Apply the following logic for every slice in `ALL_SLICES`.
 
@@ -47,30 +47,30 @@ Apply the following logic for every slice in `ALL_SLICES`.
 - `contextName` = `slice.context` if present, otherwise `"default"` — **preserve original casing** (e.g. `"Beta"`, not `"beta"`)
 - `sliceFolder` = `slice.title` lowercased, with all spaces removed and the prefix `"slice:"` stripped  
   e.g. `"Beta Enable User for Beta Test"` → `"betaenableuserforbetatest"`
-- `baseFolder` = `.slices/<contextName>/`
-- `sliceDir`   = `.slices/<contextName>/<sliceFolder>/`
+- `baseFolder` = `.build-kit-node/slices/<contextName>/`
+- `sliceDir`   = `.build-kit-node/slices/<contextName>/<sliceFolder>/`
 
 ### Write files
 
 ```bash
-mkdir -p ".slices/<contextName>/<sliceFolder>"
+mkdir -p ".build-kit-node/slices/<contextName>/<sliceFolder>"
 ```
 
-**`.slices/current_context.json`** — always overwrite:
+**`.build-kit-node/slices/current_context.json`** — always overwrite:
 
 ```json
 { "name": "Beta" }
 ```
 
-**`.slices/<contextName>/context.json`** — write once per context:
+**`.build-kit-node/slices/<contextName>/context.json`** — write once per context:
 
 ```json
 { "name": "Beta" }
 ```
 
-**`.slices/<contextName>/<sliceFolder>/slice.json`** — the full slice object with the `index` field removed.
+**`.build-kit-node/slices/<contextName>/<sliceFolder>/slice.json`** — the full slice object with the `index` field removed.
 
-### Maintain `.slices/<contextName>/index.json`
+### Maintain `.build-kit-node/slices/<contextName>/index.json`
 
 Read the file if it exists, otherwise start with `{ "slices": [] }`.
 
@@ -103,7 +103,7 @@ The `definition` field holds the full object returned by the API for that slice 
 - If an entry with the same `id` already exists: update all fields and refresh `definition`; preserve any existing `assigned` field.
 - If not found: append the new entry.
 
-Write the updated object back to `.slices/<contextName>/index.json`.
+Write the updated object back to `.build-kit-node/slices/<contextName>/index.json`.
 
 ---
 
@@ -121,20 +121,20 @@ If a specific slice was requested but not found, stop and list the available tit
 
 ```
 Slices loaded: <count> total
-Persisted to: .slices/<contextName>/
+Persisted to: .build-kit-node/slices/<contextName>/
 
 Requested slice:
   Title:  <title>
   ID:     <id>
   Status: <status>
-  Folder: .slices/<contextName>/<sliceFolder>/slice.json
+  Folder: .build-kit-node/slices/<contextName>/<sliceFolder>/slice.json
 ```
 
 Or if no filter was given:
 
 ```
 All slices (<count>) — context: <contextName>:
-  - <title> [<status>] → .slices/<contextName>/<sliceFolder>/
+  - <title> [<status>] → .build-kit-node/slices/<contextName>/<sliceFolder>/
   - ...
 ```
 

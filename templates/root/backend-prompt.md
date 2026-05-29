@@ -7,12 +7,12 @@ The structure defined in the Project-Skills is relevant.
 ## Your Task
 
 0. Do not read the entire code base. Focus on the tasks in this description.
-1. Read the description at `.slices/index.json` (in the same directory as this file). Every item in status "planned" is a task.
+1. Read `.build-kit-node/slices/current_context.json` to find the active context name, then read `.build-kit-node/slices/<contextName>/index.json`. Every item in status "planned" is a task.
 2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
 3. Make sure you are on the right branch "feature/<slicename>", if unsure, start from main.
 5. Pick the **highest priority** slice where status is "planned" ( case insensitive ). This becomes your PRD. Set the status "InProgress" in the index.json **and** update the slice status on the eventmodelers board using the `update-slice-status` skill (or MCP if available). If no slice has status planned, reply with:
    <promise>NO_TASKS</promise> and stop. Do not work on other slices.
-6. Pick the slice definition from the project root /.slices in <folder> defined in the prd. Never work on more than one slice per iteration.
+6. Pick the slice definition from `.build-kit-node/slices/<contextName>/<folder>/slice.json` as defined in the prd. Never work on more than one slice per iteration.
 7. A slice can define additional prompts as codegen/backendPrompt. any additional prompts defined in backend are hints for the implementation of the slice and have to be taken into account. If you use the additional prompt, add a line in progress.txt
 7. Define the slice type and load the matching skill. If the processors-array is not empty, it´s an automation slice.
 8. Write a short progress one liner after each step to progress.txt
